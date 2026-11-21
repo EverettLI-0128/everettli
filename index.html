@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>指数函数深度解析与交互实验室 | 高中数学</title>
+  <style>
+    :root {
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --primary-dark: #1d4ed8;
+      --accent: #e11d48;
+      --accent-light: #fff1f2;
+      --emerald: #059669;
+      --emerald-light: #ecfdf5;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+      --radius: 12px;
+      --nav-h: 46px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html {
+      scroll-behavior: smooth;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    body { padding-bottom: 48px; }
+    .top-nav {
+      position: sticky; top: 0; z-index: 60; height: var(--nav-h);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 12px;
+    }
+    .brand { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .brand-badge { background: var(--primary); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 5px; }
+    .nav-links { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--text-secondary); font-size: 12.5px;
+      font-weight: 500; padding: 5px 8px; border-radius: 6px; white-space: nowrap;
+    }
+    .nav-links a.active, .nav-links a:hover { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .container { max-width: 1080px; margin: 0 auto; padding: 12px; }
+    .hero {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #fff; border-radius: var(--radius); padding: 15px 16px; margin-bottom: 14px;
+      box-shadow: var(--shadow-md);
+    }
+    .hero h1 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .hero p { font-size: 12.5px; color: #cbd5e1; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 20px 0 10px; padding-left: 10px; border-left: 4px solid var(--primary);
+    }
+    .section-header h2 { font-size: 16.5px; font-weight: 700; }
+    .section-tag {
+      font-size: 11.5px; color: var(--primary); background: var(--primary-light);
+      padding: 2px 8px; border-radius: 99px; font-weight: 600;
+    }
+    /* 手机竖屏顶部吸顶看图分屏布局 */
+    .lab-wrapper { display: flex; flex-direction: column; gap: 12px; }
+    .graph-sticky-panel {
+      position: sticky; top: var(--nav-h); z-index: 45;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: 0 6px 18px rgba(15, 23, 42, 0.09); overflow: hidden;
+    }
+    .graph-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 10px; background: var(--surface-alt); border-bottom: 1px solid var(--border); gap: 6px;
+    }
+    .formula-readout {
+      font-family: "Times New Roman", Georgia, serif; font-size: 15px; font-weight: 700;
+      color: var(--primary-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .graph-actions { display: flex; gap: 5px; flex-shrink: 0; }
+    .btn-mini {
+      border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
+      font-size: 11.5px; font-weight: 600; padding: 4px 8px; border-radius: 6px; cursor: pointer;
+    }
+    .btn-mini.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .canvas-box {
+      position: relative; width: 100%; height: 220px; background: #fff;
+      transition: height 0.2s ease; touch-action: none;
+    }
+    .canvas-box.expanded { height: 350px; }
+    canvas#expCanvas { width: 100%; height: 100%; display: block; cursor: crosshair; }
+    .probe-badge {
+      position: absolute; top: 8px; left: 8px; background: rgba(15, 23, 42, 0.84);
+      color: #fff; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; pointer-events: none;
+    }
+    .live-metrics {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: var(--surface-alt); border-top: 1px solid var(--border); font-size: 11.5px; text-align: center;
+    }
+    .metric-cell { padding: 5px 3px; border-right: 1px solid var(--border); }
+    .metric-cell:last-child { border-right: none; }
+    .metric-label { color: var(--text-muted); font-size: 10.5px; display: block; }
+    .metric-val { font-weight: 700; color: var(--text); }
+    .metric-val.inc { color: var(--emerald); }
+    .metric-val.dec { color: var(--accent); }
+    .controls-panel {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 10px;
+    }
+    .control-group {
+      background: var(--surface-alt); border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px;
+    }
+    .control-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 5px; font-size: 13px; font-weight: 600;
+    }
+    .val-pill {
+      background: var(--primary-light); color: var(--primary-dark);
+      padding: 1px 8px; border-radius: 6px; font-weight: 700;
+    }
+    input[type="range"] {
+      width: 100%; height: 6px; border-radius: 4px; background: #cbd5e1;
+      outline: none; -webkit-appearance: none; margin: 6px 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+      background: var(--primary); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
+    }
+    .preset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .preset-btn {
+      flex: 1; min-width: 50px; padding: 5px 6px; font-size: 12px; font-weight: 600;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text-secondary); cursor: pointer;
+    }
+    .preset-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .toggle-chip {
+      display: flex; align-items: center; gap: 6px; padding: 7px 8px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    @media (min-width: 840px) {
+      .lab-wrapper { display: grid; grid-template-columns: 1.25fr 1fr; align-items: start; }
+      .graph-sticky-panel { top: calc(var(--nav-h) + 12px); }
+      .canvas-box { height: 390px; }
+    }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px; margin-bottom: 12px; box-shadow: var(--shadow-sm);
+    }
+    .card h3 { font-size: 15px; margin-bottom: 8px; }
+    .math-box {
+      background: var(--primary-light); border-left: 3.5px solid var(--primary);
+      padding: 9px 12px; border-radius: 0 8px 8px 0; margin: 8px 0; font-size: 14px;
+    }
+    .table-wrap { overflow-x: auto; margin: 8px 0; border: 1px solid var(--border); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 460px; }
+    th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); text-align: left; }
+    th { background: var(--surface-alt); font-weight: 700; }
+    .problem-item { border: 1px solid var(--border); border-radius: 9px; margin-bottom: 10px; overflow: hidden; background: var(--surface); }
+    .problem-q {
+      padding: 11px 12px; font-weight: 600; font-size: 14px; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; background: var(--surface-alt);
+    }
+    .problem-badge {
+      font-size: 11px; padding: 2px 7px; border-radius: 5px;
+      background: var(--primary-light); color: var(--primary); white-space: nowrap; flex-shrink: 0;
+    }
+    .problem-a { display: none; padding: 12px; border-top: 1px solid var(--border); font-size: 13.5px; color: var(--text-secondary); }
+    .problem-item.open .problem-a { display: block; }
+    .step-line { margin-bottom: 6px; padding-left: 8px; border-left: 2px solid #cbd5e1; }
+    .trap-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 720px) { .trap-grid { grid-template-columns: 1fr 1fr; } }
+    .trap-card {
+      background: var(--surface); border: 1px solid #fecdd3; border-top: 3.5px solid var(--accent);
+      border-radius: 9px; padding: 12px;
+    }
+    .trap-title { font-weight: 700; color: var(--accent); font-size: 14px; margin-bottom: 5px; }
+    .trap-fix { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border); color: var(--emerald); font-size: 13px; font-weight: 500; }
+    .quiz-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+    .quiz-q { font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+    .quiz-options { display: grid; grid-template-columns: 1fr; gap: 7px; }
+    @media (min-width: 640px) { .quiz-options { grid-template-columns: 1fr 1fr; } }
+    .opt-btn {
+      text-align: left; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface-alt); font-size: 13.5px; cursor: pointer; color: var(--text);
+    }
+    .opt-btn.correct { background: var(--emerald-light); border-color: var(--emerald); color: #065f46; font-weight: 600; }
+    .opt-btn.wrong { background: var(--accent-light); border-color: var(--accent); color: #9f1239; }
+    .quiz-explain { display: none; margin-top: 10px; padding: 10px; border-radius: 8px; background: #f1f5f9; font-size: 13px; color: var(--text-secondary); }
+    .quiz-explain.show { display: block; }
+    .score-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--surface); border: 1px solid var(--border); padding: 10px 14px;
+      border-radius: var(--radius); margin-bottom: 12px; font-weight: 600; font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="brand"><span class="brand-badge">高中数学</span><span>指数函数实验室</span></div>
+    <div class="nav-links">
+      <a href="#lab" class="active">图像实验</a>
+      <a href="#concepts">核心性质</a>
+      <a href="#patterns">高频题型</a>
+      <a href="#traps">易错陷阱</a>
+      <a href="#quiz">实战训练</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="hero">
+      <h1>指数函数 <i>y</i> = <i>a<sup>x</sup></i> 深度解析与交互实验室</h1>
+      <p>手机竖屏已启用顶部吸顶看图分屏：下方拖动滑块调参数，上方图像与单调性/定点实时联动。</p>
+    </div>
+
+    <div class="section-header" id="lab">
+      <h2>1. 动态函数图像实验室</h2>
+      <span class="section-tag">吸顶实时联动</span>
+    </div>
+
+    <div class="lab-wrapper">
+      <div class="graph-sticky-panel">
+        <div class="graph-toolbar">
+          <div class="formula-readout" id="formulaDisplay">y = 2.00<sup>x</sup></div>
+          <div class="graph-actions">
+            <button class="btn-mini" id="toggleSizeBtn">放大画布</button>
+            <button class="btn-mini" id="resetBtn">重置</button>
+          </div>
+        </div>
+        <div class="canvas-box" id="canvasBox">
+          <canvas id="expCanvas"></canvas>
+          <div class="probe-badge" id="probeInfo">点击/拖动图像查看坐标</div>
+        </div>
+        <div class="live-metrics">
+          <div class="metric-cell"><span class="metric-label">单调性</span><span class="metric-val inc" id="mMono">严格单调递增</span></div>
+          <div class="metric-cell"><span class="metric-label">必过定点</span><span class="metric-val" id="mFixed">(0, 1)</span></div>
+          <div class="metric-cell"><span class="metric-label">值域</span><span class="metric-val" id="mRange">(0, +∞)</span></div>
+          <div class="metric-cell"><span class="metric-label">渐近线</span><span class="metric-val" id="mAsym">y = 0</span></div>
+        </div>
+      </div>
+
+      <div class="controls-panel">
+        <div class="control-group">
+          <div class="control-header">
+            <span>底数 <i>a</i> (<i>a</i> &gt; 0 且 <i>a</i> ≠ 1)</span>
+            <span class="val-pill" id="aValText">a = 2.00</span>
+          </div>
+          <input type="range" id="aSlider" min="0.1" max="5.0" step="0.05" value="2.0" />
+          <div class="preset-row">
+            <button class="preset-btn" data-a="0.25">1/4</button>
+            <button class="preset-btn" data-a="0.5">1/2</button>
+            <button class="preset-btn active" data-a="2">2</button>
+            <button class="preset-btn" data-a="2.72">e≈2.72</button>
+            <button class="preset-btn" data-a="3">3</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-header"><span>对比参照曲线（同屏对比底数与对称性）</span></div>
+          <div class="toggle-grid">
+            <label class="toggle-chip"><input type="checkbox" id="chkReciprocal" checked /><span class="dot" style="background:#e11d48;"></span><span><i>y</i>=(1/<i>a</i>)<sup><i>x</i></sup> (y轴对称)</span></label>
+            <label class="toggle-chip"><input type="checkbox" id="chkLog" /><span class="dot" style="background:#7c3aed;"></span><span><i>y</i>=log<sub><i>a</i></sub><i>x</i> (反函数)</span></label>
+            <label class="toggle-chip"><input type="checkbox" id="chkRef2" /><span class="dot" style="background:#059669;"></span><span><i>y</i>=2<sup><i>x</i></sup> (基准对照)</span></label>
+            <label class="toggle-chip"><input type="checkbox" id="chkRef3" /><span class="dot" style="background:#d97706;"></span><span><i>y</i>=3<sup><i>x</i></sup> (底大图高)</span></label>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-header"><span>图像平移与伸缩：<i>y</i> = <i>k</i>·<i>a</i><sup><i>x</i> - <i>h</i></sup> + <i>b</i></span></div>
+          <div style="margin-top:6px;">
+            <div class="control-header" style="font-size:12px;"><span>左右平移 <i>h</i>（左加右减）</span><span class="val-pill" id="hValText">h = 0</span></div>
+            <input type="range" id="hSlider" min="-3" max="3" step="0.5" value="0" />
+          </div>
+          <div style="margin-top:6px;">
+            <div class="control-header" style="font-size:12px;"><span>上下平移 <i>b</i>（渐近线）</span><span class="val-pill" id="bValText">b = 0</span></div>
+            <input type="range" id="bSlider" min="-3" max="3" step="0.5" value="0" />
+          </div>
+          <div style="margin-top:6px;">
+            <div class="control-header" style="font-size:12px;"><span>系数 <i>k</i>（<i>k</i> &lt; 0 沿x轴翻折）</span><span class="val-pill" id="kValText">k = 1</span></div>
+            <input type="range" id="kSlider" min="-2" max="2" step="0.5" value="1" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header" id="concepts">
+      <h2>2. 核心定义与图像性质</h2>
+      <span class="section-tag">高考基础盘</span>
+    </div>
+
+    <div class="card">
+      <h3>严格定义：三个“必须”缺一不可</h3>
+      <div class="math-box">一般地，函数 <b><i>y</i> = <i>a<sup>x</sup></i> (<i>a</i> &gt; 0 且 <i>a</i> ≠ 1)</b> 叫做指数函数，定义域为 <b>R</b>。</div>
+      <p style="font-size:13.5px; color:var(--text-secondary);">
+        ① <b>底数限制</b>：<i>a</i> &gt; 0 且 <i>a</i> ≠ 1（若 <i>a</i> = 1，则 <i>y</i> = 1<sup><i>x</i></sup> = 1 是常函数）。<br/>
+        ② <b>系数必须为 1</b>：<i>a<sup>x</sup></i> 前的系数只能是 1（如 <i>y</i> = 2·3<sup><i>x</i></sup> 是指数型函数，不是指数函数）。<br/>
+        ③ <b>指数必须是单独的 <i>x</i></b>：如 <i>y</i> = 2<sup><i>x</i>+1</sup>、<i>y</i> = 3<sup>2<i>x</i></sup> 均需按复合函数处理。
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>图像与性质分类对比表</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:20%;">性质维度</th><th style="width:40%;">a &gt; 1（如 y = 2<sup>x</sup>）</th><th style="width:40%;">0 &lt; a &lt; 1（如 y = (1/2)<sup>x</sup>）</th></tr></thead>
+          <tbody>
+            <tr><td><b>图像走势</b></td><td>自左向右<b>持续上升</b>（指数爆炸）</td><td>自左向右<b>持续下降</b>，越往右越贴近 <i>x</i> 轴</td></tr>
+            <tr><td><b>定义域/值域</b></td><td colspan="2">定义域为 <b>R</b>；值域为 <b>(0, +∞)</b>（图像全在 <i>x</i> 轴上方）</td></tr>
+            <tr><td><b>必过定点</b></td><td colspan="2">恒过定点 <b>(0, 1)</b>，因为 <i>a</i><sup>0</sup> = 1</td></tr>
+            <tr><td><b>函数值分布</b></td><td><i>x</i> &gt; 0 时 <i>y</i> &gt; 1；<i>x</i> &lt; 0 时 0 &lt; <i>y</i> &lt; 1</td><td><i>x</i> &gt; 0 时 0 &lt; <i>y</i> &lt; 1；<i>x</i> &lt; 0 时 <i>y</i> &gt; 1</td></tr>
+            <tr><td><b>单调性</b></td><td>在 <b>R</b> 上是<b>增函数</b></td><td>在 <b>R</b> 上是<b>减函数</b></td></tr>
+            <tr><td><b>底大图高</b></td><td colspan="2">第一象限（<i>x</i> &gt; 0）内<b>底数越大图像越靠上</b>；第二象限则相反。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-header" id="patterns">
+      <h2>3. 高频题型与解题通法</h2>
+      <span class="section-tag">点击展开详解</span>
+    </div>
+
+    <div class="problem-item open">
+      <div class="problem-q" onclick="this.parentElement.classList.toggle('open')">
+        <span>题型一【定点问题】：无论 <i>a</i> (<i>a</i> &gt; 0, <i>a</i> ≠ 1) 取何值，<i>f</i>(<i>x</i>) = <i>a</i><sup>2<i>x</i>-4</sup> + 3 恒过哪个定点？</span>
+        <span class="problem-badge">必拿分</span>
+      </div>
+      <div class="problem-a">
+        <div class="step-line"><b>口诀：</b>令指数部分等于 0，求 <i>x</i> 再算 <i>y</i>。</div>
+        <div class="step-line"><b>解：</b>令 2<i>x</i> - 4 = 0 得 <i>x</i> = 2，此时 <i>f</i>(2) = <i>a</i><sup>0</sup> + 3 = 4，故恒过定点 <b>(2, 4)</b>。</div>
+      </div>
+    </div>
+
+    <div class="problem-item">
+      <div class="problem-q" onclick="this.parentElement.classList.toggle('open')">
+        <span>题型二【比较大小】：比较 <i>A</i> = 0.7<sup>0.8</sup>，<i>B</i> = 0.8<sup>0.7</sup>，<i>C</i> = 0.8<sup>0.8</sup> 的大小。</span>
+        <span class="problem-badge">高频选择</span>
+      </div>
+      <div class="problem-a">
+        <div class="step-line"><b>同底比指数：</b><i>y</i> = 0.8<sup><i>x</i></sup> 单调递减，因 0.7 &lt; 0.8，故 0.8<sup>0.7</sup> &gt; 0.8<sup>0.8</sup>（<b>B &gt; C</b>）。</div>
+        <div class="step-line"><b>同指比底数：</b>幂函数 <i>y</i> = <i>x</i><sup>0.8</sup> 在 (0, +∞) 递增，因 0.7 &lt; 0.8，故 0.7<sup>0.8</sup> &lt; 0.8<sup>0.8</sup>（<b>C &gt; A</b>）。综上 <b>B &gt; C &gt; A</b>。</div>
+      </div>
+    </div>
+
+    <div class="problem-item">
+      <div class="problem-q" onclick="this.parentElement.classList.toggle('open')">
+        <span>题型三【复合函数单调性】：求 <i>y</i> = (1/2)<sup><i>x</i><sup>2</sup> - 2<i>x</i> - 3</sup> 的单调递增区间与值域。</span>
+        <span class="problem-badge">同增异减</span>
+      </div>
+      <div class="problem-a">
+        <div class="step-line"><b>单调区间：</b>外层 <i>y</i> = (1/2)<sup><i>u</i></sup> 递减，由“同增异减”需内层 <i>u</i> = (<i>x</i> - 1)<sup>2</sup> - 4 递减，故递增区间为 <b>(-∞, 1]</b>。</div>
+        <div class="step-line"><b>值域：</b>内层 <i>u</i> ≥ -4，外层递减，故 0 &lt; <i>y</i> ≤ (1/2)<sup>-4</sup> = 16，值域为 <b>(0, 16]</b>。</div>
+      </div>
+    </div>
+
+    <div class="problem-item">
+      <div class="problem-q" onclick="this.parentElement.classList.toggle('open')">
+        <span>题型四【换元求最值】：求 <i>y</i> = 4<sup><i>x</i></sup> - 2<sup><i>x</i>+1</sup> + 3 在 <i>x</i> ∈ [-1, 2] 上的最值。</span>
+        <span class="problem-badge">重难点</span>
+      </div>
+      <div class="problem-a">
+        <div class="step-line"><b>换元定范围：</b>令 <i>t</i> = 2<sup><i>x</i></sup>，由 <i>x</i> ∈ [-1, 2] 得 <i>t</i> ∈ <b>[1/2, 4]</b>。</div>
+        <div class="step-line"><b>二次函数求最值：</b><i>g</i>(<i>t</i>) = <i>t</i><sup>2</sup> - 2<i>t</i> + 3 = (<i>t</i> - 1)<sup>2</sup> + 2，故 <i>t</i> = 1 时 <i>y</i><sub>min</sub> = <b>2</b>；<i>t</i> = 4 时 <i>y</i><sub>max</sub> = <b>11</b>。</div>
+      </div>
+    </div>
+
+    <div class="section-header" id="traps">
+      <h2>4. 高频易错陷阱辨析</h2>
+      <span class="section-tag">避坑指南</span>
+    </div>
+
+    <div class="trap-grid">
+      <div class="trap-card">
+        <div class="trap-title">陷阱 1：含参底数未分类讨论</div>
+        <p style="font-size:13px; color:var(--text-secondary);">解 <i>a</i><sup>2<i>x</i>-1</sup> &gt; <i>a</i><sup><i>x</i>+2</sup> 时直接去掉底数。</p>
+        <div class="trap-fix">正确做法：必须分 <b>a &gt; 1</b>（同向）和 <b>0 &lt; a &lt; 1</b>（反向）讨论。</div>
+      </div>
+      <div class="trap-card">
+        <div class="trap-title">陷阱 2：换元忘记 t = aˣ &gt; 0</div>
+        <p style="font-size:13px; color:var(--text-secondary);">求 <i>y</i> = 4<sup><i>x</i></sup> + 2<sup><i>x</i>+1</sup> + 5 最小值时直接取二次函数顶点。</p>
+        <div class="trap-fix">正确做法：<i>t</i> = 2<sup><i>x</i></sup> &gt; 0，顶点 <i>t</i> = -1 取不到，值域为 <b>(5, +∞)</b>，无最小值。</div>
+      </div>
+      <div class="trap-card">
+        <div class="trap-title">陷阱 3：指数函数与幂函数混淆</div>
+        <p style="font-size:13px; color:var(--text-secondary);">把 <i>y</i> = <i>x</i><sup>3</sup> 当指数函数，或把 <i>y</i> = 3·2<sup><i>x</i></sup> 当严格指数函数。</p>
+        <div class="trap-fix">正确做法：<i>x</i> 在指数上是<b>指数函数</b>；<i>x</i> 在底数上是<b>幂函数</b>。</div>
+      </div>
+      <div class="trap-card">
+        <div class="trap-title">陷阱 4：上下平移后渐近线算错</div>
+        <p style="font-size:13px; color:var(--text-secondary);">求 <i>y</i> = 2<sup><i>x</i></sup> - 1 值域时仍写成 (0, +∞)。</p>
+        <div class="trap-fix">正确做法：渐近线同步下移为 <b>y = -1</b>，值域为 <b>(-1, +∞)</b>。</div>
+      </div>
+    </div>
+
+    <div class="section-header" id="quiz">
+      <h2>5. 高考实战训练场</h2>
+      <span class="section-tag">即时批改</span>
+    </div>
+
+    <div class="score-bar">
+      <span>进度：<span id="qAnswered">0</span> / 6 题</span>
+      <span>得分：<span id="qScore" style="color:var(--primary);">0</span> 分</span>
+      <button class="btn-mini" onclick="resetQuiz()">重新作答</button>
+    </div>
+    <div id="quizContainer"></div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('expCanvas');
+    const ctx = canvas.getContext('2d');
+    const canvasBox = document.getElementById('canvasBox');
+    const state = { a: 2.0, h: 0, b: 0, k: 1, showReciprocal: true, showLog: false, showRef2: false, showRef3: false, probeX: null };
+
+    const aSlider = document.getElementById('aSlider');
+    const hSlider = document.getElementById('hSlider');
+    const bSlider = document.getElementById('bSlider');
+    const kSlider = document.getElementById('kSlider');
+    const formulaDisplay = document.getElementById('formulaDisplay');
+    const probeInfo = document.getElementById('probeInfo');
+    const mMono = document.getElementById('mMono');
+    const mFixed = document.getElementById('mFixed');
+    const mRange = document.getElementById('mRange');
+    const mAsym = document.getElementById('mAsym');
+
+    function formatNum(n) { return Number.isInteger(n) ? n.toString() : n.toFixed(2).replace(/\.?0+$/, ''); }
+
+    function updateReadouts() {
+      const { a, h, b, k } = state;
+      document.getElementById('aValText').textContent = `a = ${a.toFixed(2)}`;
+      document.getElementById('hValText').textContent = `h = ${formatNum(h)}`;
+      document.getElementById('bValText').textContent = `b = ${formatNum(b)}`;
+      document.getElementById('kValText').textContent = `k = ${formatNum(k)}`;
+
+      let kStr = k === 1 ? '' : (k === -1 ? '-' : `${formatNum(k)}·`);
+      let expStr = h === 0 ? 'x' : (h > 0 ? `x - ${formatNum(h)}` : `x + ${formatNum(-h)}`);
+      let bStr = b === 0 ? '' : (b > 0 ? ` + ${formatNum(b)}` : ` - ${formatNum(-b)}`);
+      formulaDisplay.innerHTML = `y = ${kStr}${a.toFixed(2)}<sup>${expStr}</sup>${bStr}`;
+
+      if (k === 0) {
+        mMono.textContent = '常函数'; mMono.className = 'metric-val';
+      } else {
+        const isInc = (a > 1 && k > 0) || (a < 1 && k < 0);
+        mMono.textContent = isInc ? '单调递增 ↑' : '单调递减 ↓';
+        mMono.className = 'metric-val ' + (isInc ? 'inc' : 'dec');
+      }
+      mFixed.textContent = `(${formatNum(h)}, ${formatNum(k + b)})`;
+      if (k === 0) { mRange.textContent = `{${formatNum(b)}}`; mAsym.textContent = '无'; }
+      else if (k > 0) { mRange.textContent = `(${formatNum(b)}, +∞)`; mAsym.textContent = `y = ${formatNum(b)}`; }
+      else { mRange.textContent = `(-∞, ${formatNum(b)})`; mAsym.textContent = `y = ${formatNum(b)}`; }
+    }
+
+    function getCoordMetrics() {
+      const rect = canvasBox.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      const scale = w < 520 ? Math.max(32, w / 10.5) : Math.max(42, w / 14);
+      return { w, h, scale, originX: w * 0.48, originY: h * 0.66 };
+    }
+
+    function drawGraph() {
+      const dpr = window.devicePixelRatio || 1;
+      const { w, h, scale, originX, originY } = getCoordMetrics();
+      if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+        canvas.width = Math.floor(w * dpr); canvas.height = Math.floor(h * dpr);
+      }
+      ctx.save(); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, w, h);
+      const toPxX = x => originX + x * scale;
+      const toPxY = y => originY - y * scale;
+      const toMathX = px => (px - originX) / scale;
+
+      ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1;
+      const minX = Math.floor(-originX / scale) - 1, maxX = Math.ceil((w - originX) / scale) + 1;
+      const minY = Math.floor((originY - h) / scale) - 1, maxY = Math.ceil(originY / scale) + 1;
+      for (let gx = minX; gx <= maxX; gx++) { ctx.beginPath(); ctx.moveTo(toPxX(gx), 0); ctx.lineTo(toPxX(gx), h); ctx.stroke(); }
+      for (let gy = minY; gy <= maxY; gy++) { ctx.beginPath(); ctx.moveTo(0, toPxY(gy)); ctx.lineTo(w, toPxY(gy)); ctx.stroke(); }
+
+      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(w, originY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(originX, 0); ctx.lineTo(originX, h); ctx.stroke();
+
+      ctx.fillStyle = '#64748b'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+      for (let gx = minX; gx <= maxX; gx++) { if (gx !== 0) ctx.fillText(gx, toPxX(gx), originY + 14); }
+      ctx.textAlign = 'right';
+      for (let gy = minY; gy <= maxY; gy++) { if (gy !== 0) ctx.fillText(gy, originX - 6, toPxY(gy) + 4); }
+      ctx.fillText('O', originX - 6, originY + 14);
+
+      if (state.k !== 0) {
+        const asymY = toPxY(state.b);
+        ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(0, asymY); ctx.lineTo(w, asymY); ctx.stroke();
+        ctx.fillStyle = '#2563eb'; ctx.textAlign = 'left';
+        ctx.fillText(`渐近线 y = ${formatNum(state.b)}`, 8, asymY - 5);
+        ctx.restore();
+      }
+
+      function plotFunction(fn, color, lw = 2.2, dashed = false) {
+        ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = lw;
+        if (dashed) ctx.setLineDash([6, 4]);
+        ctx.beginPath(); let started = false;
+        for (let px = 0; px <= w; px += 1.5) {
+          const y = fn(toMathX(px));
+          if (!Number.isFinite(y) || y > maxY + 8 || y < minY - 8) { started = false; continue; }
+          const py = toPxY(y);
+          if (!started) { ctx.moveTo(px, py); started = true; } else { ctx.lineTo(px, py); }
+        }
+        ctx.stroke(); ctx.restore();
+      }
+
+      if (state.showRef2) plotFunction(x => Math.pow(2, x), '#059669', 1.6, true);
+      if (state.showRef3) plotFunction(x => Math.pow(3, x), '#d97706', 1.6, true);
+      if (state.showReciprocal) plotFunction(x => Math.pow(1 / state.a, x), '#e11d48', 1.8, true);
+      if (state.showLog) {
+        plotFunction(x => x, '#94a3b8', 1, true);
+        plotFunction(x => x > 0 ? Math.log(x) / Math.log(state.a) : NaN, '#7c3aed', 1.8, false);
+      }
+
+      const mainFn = x => state.k * Math.pow(state.a, x - state.h) + state.b;
+      plotFunction(mainFn, '#2563eb', 2.8, false);
+
+      const fixPxX = toPxX(state.h), fixPxY = toPxY(state.k + state.b);
+      ctx.fillStyle = '#2563eb'; ctx.beginPath(); ctx.arc(fixPxX, fixPxY, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.8; ctx.stroke();
+      ctx.fillStyle = '#1e3a8a'; ctx.font = 'bold 11.5px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(`定点(${formatNum(state.h)}, ${formatNum(state.k + state.b)})`, fixPxX + 8, fixPxY - 6);
+
+      if (state.probeX !== null) {
+        const pyVal = mainFn(state.probeX), ppx = toPxX(state.probeX), ppy = toPxY(pyVal);
+        ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(ppx, originY); ctx.lineTo(ppx, ppy); ctx.lineTo(originX, ppy); ctx.stroke(); ctx.restore();
+        ctx.fillStyle = '#e11d48'; ctx.beginPath(); ctx.arc(ppx, ppy, 5.5, 0, Math.PI * 2); ctx.fill();
+        probeInfo.textContent = `x = ${state.probeX.toFixed(2)},  y = ${pyVal.toFixed(3)}`;
+      }
+      ctx.restore();
+    }
+
+    function syncAll() { updateReadouts(); drawGraph(); }
+
+    aSlider.addEventListener('input', e => {
+      let val = parseFloat(e.target.value);
+      if (Math.abs(val - 1.0) < 0.04) val = val >= 1.0 ? 1.05 : 0.95;
+      state.a = val;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      syncAll();
+    });
+    hSlider.addEventListener('input', e => { state.h = parseFloat(e.target.value); syncAll(); });
+    bSlider.addEventListener('input', e => { state.b = parseFloat(e.target.value); syncAll(); });
+    kSlider.addEventListener('input', e => { state.k = parseFloat(e.target.value
